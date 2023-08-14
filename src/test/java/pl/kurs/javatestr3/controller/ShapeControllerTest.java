@@ -475,7 +475,7 @@ class ShapeControllerTest {
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
                         .param("createdBy", "creator")
                         .param("type", "rectangle")
-                        .param("createdAtFrom", "2022-01-01T00:00:00.0000000")
+                        .param("createdAtFrom", "2090-01-01T00:00:00.0000000")
                         .param("perimeterFrom", "1")
                         .param("perimeterTo", "50")
                         .param("areaFrom", "1")
