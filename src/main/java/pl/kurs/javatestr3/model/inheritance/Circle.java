@@ -7,8 +7,8 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-
-import static java.lang.Math.PI;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -26,12 +26,9 @@ public class Circle extends Shape {
     }
 
     @Override
-    public double calculatePerimeter() {
-        return 2 * PI * radius;
-    }
-
-    @Override
-    public double calculateArea() {
-        return PI * Math.pow(radius, 2);
+    public Map<String, Object> getParameters() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("radius", radius);
+        return parameters;
     }
 }

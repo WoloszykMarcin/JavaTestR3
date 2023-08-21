@@ -8,9 +8,11 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import pl.kurs.javatestr3.security.AppUser;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,7 +25,7 @@ public abstract class Shape {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(name = "type", insertable = false, updatable = false)
     private String type;
@@ -34,33 +36,23 @@ public abstract class Shape {
     @CreatedDate
     private LocalDateTime createdDate;
 
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
     @CreatedBy
-    private String createdBy;
+    private AppUser createdBy;
 
     @LastModifiedDate
     private LocalDateTime lastModifiedDate;
 
+    @ManyToOne
+    @JoinColumn(name = "last_modified_by_id")
     @LastModifiedBy
-    private String lastModifiedBy;
-
-    @Column
-    private double area;
-
-    @Column
-    private double perimeter;
+    private AppUser lastModifiedBy;
 
     public Shape(String type) {
         this.type = type;
     }
 
-    @PrePersist
-    @PreUpdate
-    private void updateCalculatedFields() {
-        this.area = calculateArea();
-        this.perimeter = calculatePerimeter();
-    }
+    public abstract Map<String, Object> getParameters();
 
-    public abstract double calculatePerimeter();
-
-    public abstract double calculateArea();
 }

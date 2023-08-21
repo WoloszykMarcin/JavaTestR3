@@ -7,6 +7,8 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -27,12 +29,10 @@ public class Rectangle extends Shape {
     }
 
     @Override
-    public double calculatePerimeter() {
-        return 2 * length + 2 * width;
-    }
-
-    @Override
-    public double calculateArea() {
-        return length * width;
+    public Map<String, Object> getParameters() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("length", length);
+        parameters.put("width", width);
+        return parameters;
     }
 }

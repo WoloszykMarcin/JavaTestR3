@@ -7,6 +7,8 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,12 +25,9 @@ public class Square extends Shape {
     }
 
     @Override
-    public double calculatePerimeter() {
-        return 4 * side;
-    }
-
-    @Override
-    public double calculateArea() {
-        return Math.pow(side, 2);
+    public Map<String, Object> getParameters() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("side", side);
+        return parameters;
     }
 }
