@@ -1,4 +1,4 @@
-package pl.kurs.javatestr3.validations;
+package pl.kurs.javatestr3.validations.shapevalidations;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
