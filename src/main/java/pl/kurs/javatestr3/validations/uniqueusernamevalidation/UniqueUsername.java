@@ -7,8 +7,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD) //mowi o tym w którym miejscu możemy stawiać adnotację
-@Retention(RetentionPolicy.RUNTIME) //w jakiej fazie kodu adnotacja bedzie procesowana (np. Runtime - w trakcie działania aplikacji)
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = UniqueUsernameValidator.class)
 public @interface UniqueUsername {
     String message() default "USERNAME_NOT_UNIQUE";
