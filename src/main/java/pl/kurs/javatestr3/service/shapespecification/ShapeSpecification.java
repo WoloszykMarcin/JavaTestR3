@@ -3,11 +3,14 @@ package pl.kurs.javatestr3.service.shapespecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import pl.kurs.javatestr3.exception.InvalidDateFormatException;
+import pl.kurs.javatestr3.exception.customexceptions.InvalidDateFormatException;
 import pl.kurs.javatestr3.model.inheritance.Shape;
+import pl.kurs.javatestr3.repository.ShapeRepository;
+import pl.kurs.javatestr3.service.CalculationService;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.time.LocalDateTime;
@@ -24,9 +27,16 @@ public class ShapeSpecification {
 
     private final List<ISpecification> shapeParameters;
 
+    private final CalculationService calculationService;
+
+    private final ShapeRepository shapeRepository;
+
+
     @Autowired
-    public ShapeSpecification(List<ISpecification> shapeParameters) {
+    public ShapeSpecification(List<ISpecification> shapeParameters, CalculationService calculationService, ShapeRepository shapeRepository) {
         this.shapeParameters = shapeParameters;
+        this.calculationService = calculationService;
+        this.shapeRepository = shapeRepository;
     }
 
     @PostConstruct
@@ -68,21 +78,21 @@ public class ShapeSpecification {
         };
     }
 
-    private static Predicate buildBasePredicate(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
+    private Predicate buildBasePredicate(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
 
         switch (paramName) {
             case "type":
                 return cb.equal(root.get("type"), paramValue);
             case "createdBy":
-                return cb.equal(root.get("createdBy"), paramValue);
+                return cb.equal(root.get("createdBy").get("username"), paramValue);
             case "areaFrom":
-                return cb.greaterThanOrEqualTo(root.get("area"), Double.valueOf(paramValue));
+                return getPredicateUsingView(root, cb, "area", Double.valueOf(paramValue), true);
             case "areaTo":
-                return cb.lessThanOrEqualTo(root.get("area"), Double.valueOf(paramValue));
+                return getPredicateUsingView(root, cb, "area", Double.valueOf(paramValue), false);
             case "perimeterFrom":
-                return cb.greaterThanOrEqualTo(root.get("perimeter"), Double.valueOf(paramValue));
+                return getPredicateUsingView(root, cb, "perimeter", Double.valueOf(paramValue), true);
             case "perimeterTo":
-                return cb.lessThanOrEqualTo(root.get("perimeter"), Double.valueOf(paramValue));
+                return getPredicateUsingView(root, cb, "perimeter", Double.valueOf(paramValue), false);
             case "createdAtFrom":
                 LocalDateTime dateFrom = parseDate(paramValue);
                 return cb.greaterThanOrEqualTo(root.get("createdDate"), dateFrom);
@@ -92,6 +102,27 @@ public class ShapeSpecification {
             default:
                 throw new IllegalArgumentException("Attribute " + paramName + " is not recognized.");
         }
+    }
+
+    private Predicate getPredicateUsingView(Root<Shape> root, CriteriaBuilder cb, String measureType, Double value, boolean isFrom) {
+        Expression<Long> idExpression = root.get("id");
+        Predicate predicate = cb.disjunction();
+
+        List<Shape> allShapes = shapeRepository.findAll();
+
+        for (Shape shape : allShapes) {
+            double measureValue = 0.0;
+            if ("area".equals(measureType)) {
+                measureValue = calculationService.fetchCalculatedAreaFromView(shape.getType(), shape.getId());
+            } else if ("perimeter".equals(measureType)) {
+                measureValue = calculationService.fetchCalculatedPerimeterFromView(shape.getType(), shape.getId());
+            }
+
+            if ((isFrom && measureValue >= value) || (!isFrom && measureValue <= value))
+                predicate = cb.or(predicate, cb.equal(idExpression, shape.getId()));
+        }
+
+        return predicate;
     }
 
     private static LocalDateTime parseDate(String dateString) {

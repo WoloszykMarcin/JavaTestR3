@@ -1,8 +1,10 @@
 package pl.kurs.javatestr3.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,10 +17,17 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import pl.kurs.javatestr3.JavaTestR3Application;
 import pl.kurs.javatestr3.commands.CreateShapeCommand;
+import pl.kurs.javatestr3.commands.ShapeUpdateCommand;
 import pl.kurs.javatestr3.repository.ShapeRepository;
 
+import javax.sql.DataSource;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.Map;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,6 +45,16 @@ class ShapeControllerTest {
     @Autowired
     private ShapeRepository shapeRepository;
 
+    @BeforeAll
+    static void setUp(@Autowired DataSource dataSource) throws Exception {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            String sql = new String(Files.readAllBytes(Paths.get("src/test/resources/sql/create-views-h2.sql")));
+            stmt.execute(sql);
+        }
+    }
+
     @Test
     @WithMockUser(roles = "CREATOR")
     public void shouldAddCircle() throws Exception {
@@ -51,8 +70,8 @@ class ShapeControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("circle"))
-                .andExpect(jsonPath("$.radius").value("5.0"));
+                .andExpect(jsonPath("$.shapeType").value("circle"))
+                .andExpect(jsonPath("$.parameters.radius").value(5.0));
     }
 
     @Test
@@ -70,9 +89,9 @@ class ShapeControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("rectangle"))
-                .andExpect(jsonPath("$.length").value("10.0"))
-                .andExpect(jsonPath("$.width").value("7.0"));
+                .andExpect(jsonPath("$.shapeType").value("rectangle"))
+                .andExpect(jsonPath("$.parameters.length").value("10.0"))
+                .andExpect(jsonPath("$.parameters.width").value("7.0"));
     }
 
     @Test
@@ -90,8 +109,8 @@ class ShapeControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("square"))
-                .andExpect(jsonPath("$.side").value("10.0"));
+                .andExpect(jsonPath("$.shapeType").value("square"))
+                .andExpect(jsonPath("$.parameters.side").value("10.0"));
     }
 
     @Test
@@ -153,9 +172,9 @@ class ShapeControllerTest {
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].type").value("CIRCLE"))
-                .andExpect(jsonPath("$[1].type").value("RECTANGLE"))
-                .andExpect(jsonPath("$[2].type").value("SQUARE"));
+                .andExpect(jsonPath("$[0].shapeType").value("CIRCLE"))
+                .andExpect(jsonPath("$[1].shapeType").value("RECTANGLE"))
+                .andExpect(jsonPath("$[2].shapeType").value("SQUARE"));
     }
 
 
@@ -322,7 +341,7 @@ class ShapeControllerTest {
                         .content(circleJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("circle"));
+                .andExpect(jsonPath("$.shapeType").value("circle"));
 
         // Prepare the query parameters to match the working URL
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -334,7 +353,7 @@ class ShapeControllerTest {
                         .param("areaFrom", "1")
                         .param("radiusFrom", "4.0"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].type").value("CIRCLE"))
+                .andExpect(jsonPath("$[0].shapeType").value("CIRCLE"))
                 .andExpect(jsonPath("$[0].createdBy").value("CREATOR"));
     }
 
@@ -364,7 +383,7 @@ class ShapeControllerTest {
                         .param("areaFrom", "1")
                         .param("sideFrom", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].type").value("SQUARE"))
+                .andExpect(jsonPath("$[0].shapeType").value("SQUARE"))
                 .andExpect(jsonPath("$[0].createdBy").value("CREATOR"));
     }
 
@@ -382,7 +401,7 @@ class ShapeControllerTest {
                         .content(rectangleJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("rectangle"));
+                .andExpect(jsonPath("$.shapeType").value("rectangle"));
 
         // Prepare the query parameters to match the working URL
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -413,7 +432,7 @@ class ShapeControllerTest {
                         .content(circleJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("circle"));
+                .andExpect(jsonPath("$.shapeType").value("circle"));
 
         // Prepare the query parameters with an error: querying for a triangle
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -441,7 +460,7 @@ class ShapeControllerTest {
                         .content(squareJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("square"));
+                .andExpect(jsonPath("$.shapeType").value("square"));
 
         // Prepare the query parameters with an error: side value too high
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -469,7 +488,7 @@ class ShapeControllerTest {
                         .content(rectangleJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("rectangle"));
+                .andExpect(jsonPath("$.shapeType").value("rectangle"));
 
         // Prepare the query parameters with an error: wrong date for the createdAtFrom parameter
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -482,6 +501,41 @@ class ShapeControllerTest {
                         .param("lengthFrom", "11")
                         .param("widthFrom", "4"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"}) //any ADMIN can perform this action
+    public void shouldUpdateShape() throws Exception {
+        // Given - add a rectangle
+        CreateShapeCommand rectangleCommand = new CreateShapeCommand();
+        rectangleCommand.setShapeType("rectangle");
+        rectangleCommand.setParameters(Map.of("length", 10.0, "width", 5.0));
+        String rectangleJson = objectMapper.writeValueAsString(rectangleCommand);
+
+        MvcResult result = postman.perform(MockMvcRequestBuilders.post("/api/v1/shapes")
+                        .with(user("creator").roles("CREATOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(rectangleJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.shapeType").value("rectangle"))
+                .andReturn();
+
+        // Parse the response to get the ID of the created rectangle
+        String responseString = result.getResponse().getContentAsString();
+        Long shapeId = Long.valueOf(JsonPath.read(responseString, "$.id").toString());
+
+        // Now, perform the update using the obtained shapeId
+        ShapeUpdateCommand updateCommand = new ShapeUpdateCommand();
+        updateCommand.setId(shapeId);
+        // [.. other fields initialization ..]
+
+        String updateJson = objectMapper.writeValueAsString(updateCommand);
+
+        postman.perform(MockMvcRequestBuilders.put("/api/v1/shapes/" + shapeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isOk());
     }
 
     @AfterEach
