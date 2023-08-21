@@ -521,14 +521,11 @@ class ShapeControllerTest {
                 .andExpect(jsonPath("$.shapeType").value("rectangle"))
                 .andReturn();
 
-        // Parse the response to get the ID of the created rectangle
         String responseString = result.getResponse().getContentAsString();
         Long shapeId = Long.valueOf(JsonPath.read(responseString, "$.id").toString());
 
-        // Now, perform the update using the obtained shapeId
         ShapeUpdateCommand updateCommand = new ShapeUpdateCommand();
         updateCommand.setId(shapeId);
-        // [.. other fields initialization ..]
 
         String updateJson = objectMapper.writeValueAsString(updateCommand);
 

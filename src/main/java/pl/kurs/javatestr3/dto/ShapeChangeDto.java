@@ -1,7 +1,6 @@
 package pl.kurs.javatestr3.dto;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 
 import java.time.LocalDateTime;
