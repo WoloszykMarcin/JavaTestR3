@@ -36,7 +36,6 @@ public class AppUserService implements UserDetailsService {
         AppUser user = new AppUser("Anna", "Kowalska", "user", passwordEncoder.encode("user"), Set.of(userRole));
         AppUser adminForTests = new AppUser("admin", "admin", "admin", passwordEncoder.encode("admin"), Set.of(adminRole));
 
-//        appRoleRepository.save(adminRole);
         appUserRepository.saveAll(List.of(admin, user, adminForTests));
     }
 
