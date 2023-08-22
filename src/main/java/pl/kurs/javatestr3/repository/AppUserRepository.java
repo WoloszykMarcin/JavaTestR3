@@ -18,10 +18,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Query("SELECT u FROM AppUser u LEFT JOIN FETCH u.roles WHERE u.username = ?1")
     Optional<AppUser> findByUsernameWithRoles(String username);
-
-    @Query("SELECT COUNT(s) FROM AppUser u JOIN u.createdShapes s WHERE u.id = :id")
-    int countCreatedShapesByUserId(@Param("id") Long id);
-
     @Query(value = "SELECT u FROM AppUser u",
             countQuery = "SELECT COUNT(u) FROM AppUser u")
     Page<AppUser> findAllUsers(Pageable pageable);
