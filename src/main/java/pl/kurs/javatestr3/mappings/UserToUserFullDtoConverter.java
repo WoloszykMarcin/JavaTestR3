@@ -25,7 +25,7 @@ public class UserToUserFullDtoConverter implements Converter<AppUser, UserFullDt
                 .lastName(source.getLastName())
                 .username(source.getUsername())
                 .appRoles(source.getRoles())
-                .numberOfCreatedFigures(appUserRepository.countCreatedShapesByUserId(source.getId()))
+                .numberOfCreatedFigures(source.getNumberOfCreatedFigures())
                 .build();
 
         return dto;
