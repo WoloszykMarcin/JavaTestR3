@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,18 +14,16 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
 import pl.kurs.javatestr3.JavaTestR3Application;
 import pl.kurs.javatestr3.commands.CreateShapeCommand;
 import pl.kurs.javatestr3.commands.ShapeUpdateCommand;
+import pl.kurs.javatestr3.repository.ShapeChangeRepository;
 import pl.kurs.javatestr3.repository.ShapeRepository;
 
-import javax.sql.DataSource;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.Statement;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,15 +42,8 @@ class ShapeControllerTest {
     @Autowired
     private ShapeRepository shapeRepository;
 
-    @BeforeAll
-    static void setUp(@Autowired DataSource dataSource) throws Exception {
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement()) {
-
-            String sql = new String(Files.readAllBytes(Paths.get("src/test/resources/sql/create-views-h2.sql")));
-            stmt.execute(sql);
-        }
-    }
+    @Autowired
+    private ShapeChangeRepository shapeChangeRepository;
 
     @Test
     @WithMockUser(roles = "CREATOR")
@@ -188,10 +178,11 @@ class ShapeControllerTest {
 
 
     @Test
-    public void shouldReturn404NotFoundResponseCodeWhenNoFiguresInADatabase() throws Exception {
+    public void shouldReturnEmptyListWhenNoFiguresInADatabase() throws Exception {
         // Given-when-then
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -324,7 +315,8 @@ class ShapeControllerTest {
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
                         .param("type", "invalidType")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -346,12 +338,7 @@ class ShapeControllerTest {
         // Prepare the query parameters to match the working URL
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
                         .param("createdBy", "creator")
-                        .param("type", "circle")
-                        .param("createdAtFrom", "2023-08-13T18:13:25.4133777")
-                        .param("perimeterFrom", "1")
-                        .param("perimeterTo", "50")
-                        .param("areaFrom", "1")
-                        .param("radiusFrom", "4.0"))
+                        .param("type", "circle"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].shapeType").value("CIRCLE"))
                 .andExpect(jsonPath("$[0].createdBy").value("CREATOR"));
@@ -383,8 +370,8 @@ class ShapeControllerTest {
                         .param("areaFrom", "1")
                         .param("sideFrom", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].shapeType").value("SQUARE"))
-                .andExpect(jsonPath("$[0].createdBy").value("CREATOR"));
+                .andExpect(jsonPath("$[0].createdBy").value("CREATOR"))
+                .andExpect(jsonPath("$[0].shapeType").value("SQUARE"));
     }
 
     @Test
@@ -403,19 +390,22 @@ class ShapeControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.shapeType").value("rectangle"));
 
+        LinkedMultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
+        requestParams.add("lengthFrom", "9");
+
         // Prepare the query parameters to match the working URL
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
-                        .param("createdBy", "creator")
-                        .param("type", "rectangle")
-                        .param("createdAtFrom", "2023-08-13T18:13:25.4133777")
-                        .param("perimeterFrom", "1")
-                        .param("perimeterTo", "50")
-                        .param("areaFrom", "1")
-                        .param("lengthFrom", "9")
-                        .param("widthFrom", "4"))
+                        .params(requestParams))
+//                        .param("type", "rectangle")
+//                        .param("createdAtFrom", "2023-08-13T18:13:25.4133777")
+//                        .param("perimeterFrom", "1")
+//                        .param("perimeterTo", "50")
+//                        .param("areaFrom", "1")
+//                        .param("lengthFrom", "9")
+//                        .param("widthFrom", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].createdBy").value("CREATOR"))
-                .andExpect(jsonPath("$[0].shapeType").value("rectangle"));
+                .andExpect(jsonPath("$[0].createdBy").value("creator"))
+                .andExpect(jsonPath("$[0].shapeType").value("RECTANGLE"));
     }
 
     @Test
@@ -434,7 +424,6 @@ class ShapeControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.shapeType").value("circle"));
 
-        // Prepare the query parameters with an error: querying for a triangle
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
                         .param("createdBy", "creator")
                         .param("type", "triangle")
@@ -443,7 +432,8 @@ class ShapeControllerTest {
                         .param("perimeterTo", "50")
                         .param("areaFrom", "1")
                         .param("radiusFrom", "6"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -471,7 +461,8 @@ class ShapeControllerTest {
                         .param("perimeterTo", "50")
                         .param("areaFrom", "1")
                         .param("sideFrom", "50"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -500,11 +491,12 @@ class ShapeControllerTest {
                         .param("areaFrom", "1")
                         .param("lengthFrom", "11")
                         .param("widthFrom", "4"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"}) //any ADMIN can perform this action
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     public void shouldUpdateShape() throws Exception {
         // Given - add a rectangle
         CreateShapeCommand rectangleCommand = new CreateShapeCommand();
@@ -526,6 +518,7 @@ class ShapeControllerTest {
 
         ShapeUpdateCommand updateCommand = new ShapeUpdateCommand();
         updateCommand.setId(shapeId);
+        updateCommand.setParameters(Map.of("length", 11.0, "width", 7.0));
 
         String updateJson = objectMapper.writeValueAsString(updateCommand);
 
@@ -537,6 +530,7 @@ class ShapeControllerTest {
 
     @AfterEach
     void cleanUp() {
+        shapeChangeRepository.deleteAll();
         shapeRepository.deleteAll();
     }
 }

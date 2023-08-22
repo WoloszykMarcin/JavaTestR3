@@ -36,7 +36,9 @@ public class UserController {
         newUser.setPassword(passwordEncoder.encode(command.getPassword()));
         AppUser savedUser = appUserService.createUser(newUser, command.getRoleName());
 
-        return ResponseEntity.ok(new StatusDto("new User with name " + savedUser.getUsername() + " successfully added with role: " + command.getRoleName()));
+        String savedUserRoleName = savedUser.getRoles().iterator().next().getName();
+
+        return ResponseEntity.ok(new StatusDto("new User with name " + savedUser.getUsername() + " successfully added with role: " + savedUserRoleName));
     }
 
     @GetMapping

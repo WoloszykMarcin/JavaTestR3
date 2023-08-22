@@ -125,6 +125,30 @@ class ShapeSpecificationTest {
     }
 
     @Test
+    public void findByCriteriaUsingMultipleParametersTest() {
+        Map<String, String> criteria = new HashMap<>();
+        criteria.put("sideFrom", "3.0");
+        criteria.put("radiusFrom", "5.0");
+        criteria.put("widthFrom", "4.0");
+        criteria.put("createdAtFrom", "2023-01-01T12:00:00");
+
+        when(mockCb.treat(mockRoot, Square.class)).thenReturn(mock(Root.class));
+        when(mockCb.treat(mockRoot, Circle.class)).thenReturn(mock(Root.class));
+        when(mockCb.treat(mockRoot, Rectangle.class)).thenReturn(mock(Root.class));
+        when(mockCb.greaterThanOrEqualTo(any(), anyDouble())).thenReturn(mockPredicate);
+        when(mockCb.greaterThanOrEqualTo(any(), any(LocalDateTime.class))).thenReturn(mockPredicate);
+
+        Specification<Shape> spec = shapeSpecification.findByCriteria(criteria);
+        spec.toPredicate(mockRoot, null, mockCb);
+
+        verify(mockCb).treat(mockRoot, Square.class);
+        verify(mockCb).treat(mockRoot, Circle.class);
+        verify(mockCb).treat(mockRoot, Rectangle.class);
+        verify(mockCb, times(3)).greaterThanOrEqualTo(any(), anyDouble());
+        verify(mockCb).greaterThanOrEqualTo(any(), any(LocalDateTime.class));
+    }
+
+    @Test
     public void findByCriteriaWithValidDateTest() {
         Map<String, String> criteria = new HashMap<>();
         criteria.put("createdAtFrom", "2023-01-01T12:00:00");

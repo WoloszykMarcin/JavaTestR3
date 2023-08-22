@@ -16,7 +16,6 @@ import pl.kurs.javatestr3.security.AppRole;
 import pl.kurs.javatestr3.security.AppUser;
 
 import javax.annotation.PostConstruct;
-import javax.management.relation.Role;
 import java.util.List;
 import java.util.Set;
 
@@ -37,8 +36,8 @@ public class AppUserService implements UserDetailsService {
         AppUser user = new AppUser("Anna", "Kowalska", "user", passwordEncoder.encode("user"), Set.of(userRole));
         AppUser adminForTests = new AppUser("admin", "admin", "admin", passwordEncoder.encode("admin"), Set.of(adminRole));
 
-        appRoleRepository.save(adminRole);
-        appUserRepository.saveAll(List.of(admin, user));
+//        appRoleRepository.save(adminRole);
+        appUserRepository.saveAll(List.of(admin, user, adminForTests));
     }
 
     @Transactional
