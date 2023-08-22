@@ -16,6 +16,7 @@ import pl.kurs.javatestr3.security.AppRole;
 import pl.kurs.javatestr3.security.AppUser;
 
 import javax.annotation.PostConstruct;
+import javax.management.relation.Role;
 import java.util.List;
 import java.util.Set;
 
@@ -54,7 +55,12 @@ public class AppUserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Page<AppUser> getAllUsers(Pageable pageable) {
-        return appUserRepository.findAllWithRoles(pageable);
+        Page<AppUser> users = appUserRepository.findAllUsers(pageable);
+        for (AppUser user : users) {
+            Set<AppRole> roles = appUserRepository.findRolesByUserId(user.getId());
+            user.setRoles(roles);
+        }
+        return users;
     }
 
     @Override

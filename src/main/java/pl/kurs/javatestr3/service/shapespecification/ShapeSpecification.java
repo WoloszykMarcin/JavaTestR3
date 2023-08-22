@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pl.kurs.javatestr3.model.inheritance.Shape;
-import pl.kurs.javatestr3.service.DataUtil;
+import pl.kurs.javatestr3.service.DateUtil;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -75,10 +75,10 @@ public class ShapeSpecification {
             case "createdBy":
                 return cb.equal(root.get("createdBy").get("username"), paramValue);
             case "createdAtFrom":
-                LocalDateTime dateFrom = DataUtil.parseDate(paramValue);
+                LocalDateTime dateFrom = DateUtil.parseDate(paramValue);
                 return cb.greaterThanOrEqualTo(root.get("createdDate"), dateFrom);
             case "createdAtTo":
-                LocalDateTime dateTo = DataUtil.parseDate(paramValue);
+                LocalDateTime dateTo = DateUtil.parseDate(paramValue);
                 return cb.lessThanOrEqualTo(root.get("createdDate"), dateTo);
             default:
                 throw new IllegalArgumentException("Attribute " + paramName + " is not recognized.");

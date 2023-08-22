@@ -7,9 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import pl.kurs.javatestr3.security.AppRole;
 import pl.kurs.javatestr3.security.AppUser;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
@@ -20,9 +22,12 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     @Query("SELECT COUNT(s) FROM AppUser u JOIN u.createdShapes s WHERE u.id = :id")
     int countCreatedShapesByUserId(@Param("id") Long id);
 
-    @Query(value = "SELECT DISTINCT u FROM AppUser u LEFT JOIN FETCH u.roles",
+    @Query(value = "SELECT u FROM AppUser u",
             countQuery = "SELECT COUNT(u) FROM AppUser u")
-    Page<AppUser> findAllWithRoles(Pageable pageable);
+    Page<AppUser> findAllUsers(Pageable pageable);
+
+    @Query("SELECT r FROM AppUser u JOIN u.roles r WHERE u.id = :userId")
+    Set<AppRole> findRolesByUserId(@Param("userId") Long userId);
 
     boolean existsByUsername(String username);
 }
