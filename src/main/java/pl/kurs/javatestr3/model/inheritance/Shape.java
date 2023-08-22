@@ -55,4 +55,8 @@ public abstract class Shape {
 
     public abstract Map<String, Object> getParameters();
 
+    public abstract double getArea();
+
+    public abstract double getPerimeter();
+
 }

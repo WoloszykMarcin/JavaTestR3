@@ -23,13 +23,9 @@ public class ShapeChangeService {
 
     @Transactional(readOnly = true)
     public List<ShapeChange> getChangesForShape(Long shapeId) {
-        return shapeChangeRepository.findByShapeId(shapeId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ShapeChange> getChangesForShapeById(Long shapeId) {
         return shapeChangeRepository.findByShapeIdWithDetails(shapeId);
     }
+
 
     @Transactional
     public void registerChange(Shape shape, Map<String, Object> changedFields, AppUser modifiedBy) {

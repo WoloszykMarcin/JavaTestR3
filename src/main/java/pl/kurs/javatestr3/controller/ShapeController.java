@@ -14,7 +14,6 @@ import pl.kurs.javatestr3.model.ShapeChange;
 import pl.kurs.javatestr3.model.inheritance.Shape;
 import pl.kurs.javatestr3.security.AppUser;
 import pl.kurs.javatestr3.service.AppUserService;
-import pl.kurs.javatestr3.service.CalculationService;
 import pl.kurs.javatestr3.service.ShapeChangeService;
 import pl.kurs.javatestr3.service.ShapeService;
 
@@ -35,7 +34,7 @@ public class ShapeController {
 
     private final ModelMapper modelMapper;
 
-    public ShapeController(ShapeChangeService shapeChangeService, ShapeService shapeService, AppUserService userService, ModelMapper modelMapper, CalculationService calculationService) {
+    public ShapeController(ShapeChangeService shapeChangeService, ShapeService shapeService, AppUserService userService, ModelMapper modelMapper) {
         this.shapeChangeService = shapeChangeService;
         this.shapeService = shapeService;
         this.userService = userService;
@@ -43,12 +42,16 @@ public class ShapeController {
     }
 
     @PostMapping
-    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command) {
-        Shape shape = shapeService.createShape(command);
-        ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
+    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command, Principal principal) {
+        String currentUsername = principal.getName();
+        UserDetails userDetails = userService.loadUserByUsername(currentUsername);
+        AppUser currentUser = (AppUser) userDetails;
 
-        //temporary used as an addon to ShapeToShapeFullDtoConverter (issues with getType() and calculating area and perimeter (manual set up works fine))
-        shapeFullDto = shapeService.setTypePerimeterAndArea(shape, shapeFullDto);
+        Shape shape = shapeService.createShape(command, currentUser);
+        ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
+        shapeFullDto.setShapeType(shape.getType());
+        shapeFullDto.setCalculatedArea(shape.getArea());
+        shapeFullDto.setCalculatedPerimeter(shape.getPerimeter());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(shapeFullDto);
     }
@@ -70,7 +73,7 @@ public class ShapeController {
     public ResponseEntity<List<ShapeFullDto>> getShapesByParameters(@RequestParam Map<String, String> queryParams) {
         List<ShapeFullDto> shapeDtos = shapeService.getShapesByParameters(queryParams);
 
-        return shapeDtos.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(shapeDtos);
+        return ResponseEntity.ok(shapeDtos);
     }
 
     @GetMapping("/{id}/changes")

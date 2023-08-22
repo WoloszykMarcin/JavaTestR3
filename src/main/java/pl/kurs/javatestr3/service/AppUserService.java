@@ -54,11 +54,6 @@ public class AppUserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Page<AppUser> getAllUsers(Pageable pageable) {
-        return appUserRepository.findAll(pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<AppUser> findAllWithRoles(Pageable pageable) {
         return appUserRepository.findAllWithRoles(pageable);
     }
 

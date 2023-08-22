@@ -25,6 +25,16 @@ public class Square extends Shape {
     }
 
     @Override
+    public double getPerimeter() {
+        return 4 * side;
+    }
+
+    @Override
+    public double getArea() {
+        return Math.pow(side, 2);
+    }
+
+    @Override
     public Map<String, Object> getParameters() {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("side", side);

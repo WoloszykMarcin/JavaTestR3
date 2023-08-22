@@ -25,6 +25,4 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Page<AppUser> findAllWithRoles(Pageable pageable);
 
     boolean existsByUsername(String username);
-    AppUser findByUsername(String username);
-
 }

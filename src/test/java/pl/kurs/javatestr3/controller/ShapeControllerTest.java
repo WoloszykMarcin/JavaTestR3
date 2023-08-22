@@ -371,7 +371,7 @@ class ShapeControllerTest {
                         .content(squareJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.type").value("square"));
+                .andExpect(jsonPath("$.shapeType").value("square"));
 
         // Prepare the query parameters to match the working URL
         postman.perform(MockMvcRequestBuilders.get("/api/v1/shapes")
@@ -414,8 +414,8 @@ class ShapeControllerTest {
                         .param("lengthFrom", "9")
                         .param("widthFrom", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].createdBy").value("creator"))
-                .andExpect(jsonPath("$[0].type").value("rectangle"));
+                .andExpect(jsonPath("$[0].createdBy").value("CREATOR"))
+                .andExpect(jsonPath("$[0].shapeType").value("rectangle"));
     }
 
     @Test

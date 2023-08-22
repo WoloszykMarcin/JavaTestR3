@@ -10,6 +10,8 @@ import javax.persistence.Entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Math.PI;
+
 @Getter
 @Setter
 @Entity
@@ -23,6 +25,16 @@ public class Circle extends Shape {
     public Circle(String type, double radius) {
         super(type);
         this.radius = radius;
+    }
+
+    @Override
+    public double getPerimeter() {
+        return 2 * PI * radius;
+    }
+
+    @Override
+    public double getArea() {
+        return PI * Math.pow(radius, 2);
     }
 
     @Override

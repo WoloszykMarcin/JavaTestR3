@@ -10,6 +10,7 @@ import pl.kurs.javatestr3.dto.ShapeFullDto;
 import pl.kurs.javatestr3.exception.customexceptions.FigureNotFoundException;
 import pl.kurs.javatestr3.model.factory.ShapeFactory;
 import pl.kurs.javatestr3.model.inheritance.Shape;
+import pl.kurs.javatestr3.repository.AppUserRepository;
 import pl.kurs.javatestr3.repository.ShapeRepository;
 import pl.kurs.javatestr3.security.AppUser;
 import pl.kurs.javatestr3.service.shapespecification.ShapeSpecification;
@@ -26,22 +27,22 @@ public class ShapeService {
     private final ShapeFactory shapeFactory;
     private final ShapeSpecification shapeSpecification;
     private final ShapeChangeService shapeChangeService;
-    private final CalculationService calculationService;
+
+    private final AppUserRepository appUserRepository;
     private final ModelMapper modelMapper;
 
-    public ShapeService(ShapeRepository repository, ShapeFactory shapeFactory, ShapeSpecification shapeSpecification, ShapeChangeService shapeChangeService, CalculationService calculationService, ModelMapper modelMapper) {
+    public ShapeService(ShapeRepository repository, ShapeFactory shapeFactory, ShapeSpecification shapeSpecification, ShapeChangeService shapeChangeService, AppUserRepository appUserRepository, ModelMapper modelMapper) {
         this.repository = repository;
         this.shapeFactory = shapeFactory;
         this.shapeSpecification = shapeSpecification;
         this.shapeChangeService = shapeChangeService;
-        this.calculationService = calculationService;
+        this.appUserRepository = appUserRepository;
         this.modelMapper = modelMapper;
     }
 
     @Transactional
     public void updateShape(Long id, ShapeUpdateCommand command, AppUser currentUser) {
         Shape toEdit = repository.findById(id).orElseThrow(() -> new FigureNotFoundException("Figure not found"));
-        toEdit.setLastModifiedBy(currentUser);
 
         Map<String, Object> changedFields = command.getParameters();
 
@@ -68,8 +69,17 @@ public class ShapeService {
     }
 
     @Transactional
-    public Shape createShape(CreateShapeCommand command) {
-        return repository.saveAndFlush(shapeFactory.create(command));
+    public Shape createShape(CreateShapeCommand command, AppUser currentUser) {
+        Shape savedShape = repository.saveAndFlush(shapeFactory.create(command));
+        incrementUserFigureCount(currentUser);
+
+        return savedShape;
+    }
+
+    @Transactional
+    void incrementUserFigureCount(AppUser user) {
+        user.setNumberOfCreatedFigures(user.getNumberOfCreatedFigures() + 1);
+        appUserRepository.save(user);
     }
 
     @Transactional(readOnly = true)
@@ -77,24 +87,30 @@ public class ShapeService {
         Specification<Shape> spec = shapeSpecification.findByCriteria(queryParams);
         List<Shape> shapes = repository.findAll(spec);
 
-        //temporary used as an addon to ShapeToShapeFullDtoConverter (issues with getType() and calculating area and perimeter (manual set up works fine))
+        shapes = filterShapesByAreaAndPerimeter(shapes, queryParams);
+
         return shapes.stream()
-                .map(shape -> setTypePerimeterAndArea(shape, modelMapper.map(shape, ShapeFullDto.class)))
+                .map(shape -> {
+                    ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
+                    shapeFullDto.setShapeType(shape.getType());
+                    shapeFullDto.setCalculatedArea(shape.getArea());
+                    shapeFullDto.setCalculatedPerimeter(shape.getPerimeter());
+                    return shapeFullDto;
+                })
                 .collect(Collectors.toList());
     }
 
-    //temporary used as an addon to ShapeToShapeFullDtoConverter (issues with getType() and calculating area and perimeter (manual set up works fine))
-    public ShapeFullDto setTypePerimeterAndArea(Shape shape, ShapeFullDto shapeFullDto) {
-        //set type
-        shapeFullDto.setShapeType(shape.getType());
+    private List<Shape> filterShapesByAreaAndPerimeter(List<Shape> shapes, Map<String, String> queryParams) {
+        Double minArea = queryParams.containsKey("areaFrom") ? Double.valueOf(queryParams.get("areaFrom")) : null;
+        Double maxArea = queryParams.containsKey("areaTo") ? Double.valueOf(queryParams.get("areaTo")) : null;
+        Double minPerimeter = queryParams.containsKey("perimeterFrom") ? Double.valueOf(queryParams.get("perimeterFrom")) : null;
+        Double maxPerimeter = queryParams.containsKey("perimeterTo") ? Double.valueOf(queryParams.get("perimeterTo")) : null;
 
-        //get calculated area and perimeter
-        Double calculatedArea = calculationService.fetchCalculatedAreaFromView(shape.getType(), shape.getId());
-        Double calculatedPerimeter = calculationService.fetchCalculatedPerimeterFromView(shape.getType(), shape.getId());
-
-        shapeFullDto.setCalculatedArea(calculatedArea);
-        shapeFullDto.setCalculatedPerimeter(calculatedPerimeter);
-
-        return shapeFullDto;
+        return shapes.stream()
+                .filter(shape -> (minArea == null || shape.getArea() >= minArea)
+                        && (maxArea == null || shape.getArea() <= maxArea)
+                        && (minPerimeter == null || shape.getPerimeter() >= minPerimeter)
+                        && (maxPerimeter == null || shape.getPerimeter() <= maxPerimeter))
+                .collect(Collectors.toList());
     }
 }
