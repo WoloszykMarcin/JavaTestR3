@@ -14,7 +14,7 @@ import java.util.Map;
 @Builder
 public class ShapeFullDto {
     private Long id;
-    private String shapeType;
+    private String type;
     private int version;
     private LocalDateTime createdDate;
     private String createdBy;

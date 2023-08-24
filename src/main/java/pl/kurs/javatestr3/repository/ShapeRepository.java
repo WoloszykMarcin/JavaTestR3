@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import pl.kurs.javatestr3.model.inheritance.Shape;
 
 public interface ShapeRepository extends JpaRepository<Shape, Long>, JpaSpecificationExecutor<Shape> {
+    boolean existsByCreatedByUsernameAndId(String username, Long id);
 }

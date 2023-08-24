@@ -3,6 +3,7 @@ package pl.kurs.javatestr3.service.shapespecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import pl.kurs.javatestr3.exception.customexceptions.WrongAttributeException;
 import pl.kurs.javatestr3.model.inheritance.Shape;
 import pl.kurs.javatestr3.service.DateUtil;
 
@@ -18,10 +19,9 @@ import java.util.Map;
 
 @Service
 public class ShapeSpecification {
-    private final Map<String, ISpecification> shapeParametersRegistry = new HashMap<>();
+    private final Map<String, List<ISpecification>> shapeParametersRegistry = new HashMap<>();
 
     private final List<ISpecification> shapeParameters;
-
 
     @Autowired
     public ShapeSpecification(List<ISpecification> shapeParameters) {
@@ -32,43 +32,44 @@ public class ShapeSpecification {
     private void initializeRegistry() {
         for (ISpecification param : shapeParameters) {
             for (String key : param.supportedParameters()) {
-                shapeParametersRegistry.put(key, param);
+                shapeParametersRegistry.computeIfAbsent(key, k -> new ArrayList<>()).add(param);
             }
         }
     }
 
     public Specification<Shape> findByCriteria(Map<String, String> criteria) {
         return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+            List<Predicate> groupedPredicates = new ArrayList<>();
 
             for (Map.Entry<String, String> entry : criteria.entrySet()) {
                 String paramName = entry.getKey();
                 String paramValue = entry.getValue();
 
-                ISpecification parameterBuilder = shapeParametersRegistry.get(paramName);
-                if (parameterBuilder != null) {
-                    Predicate customPredicate = parameterBuilder.build(root, cb, paramName, paramValue);
-                    if (customPredicate != null) {
-                        predicates.add(customPredicate);
-                        continue;
-                    }
-                }
+                List<ISpecification> parameterBuilders = shapeParametersRegistry.get(paramName);
 
-                try {
-                    Predicate basePredicate = buildBasePredicate(root, cb, paramName, paramValue);
-                    if (basePredicate != null) {
-                        predicates.add(basePredicate);
+                if (parameterBuilders != null) {
+                    List<Predicate> shapeSpecificPredicates = new ArrayList<>();
+
+                    for (ISpecification builder : parameterBuilders) {
+                        Predicate customPredicate = builder.build(root, cb, paramName, paramValue);
+                        if (customPredicate != null)
+                            shapeSpecificPredicates.add(customPredicate);
                     }
-                } catch (IllegalArgumentException ex) {
-                    System.out.println("ex.getMessage() = " + ex.getMessage());
+
+                    if (!shapeSpecificPredicates.isEmpty())
+                        groupedPredicates.add(cb.or(shapeSpecificPredicates.toArray(new Predicate[0])));
+
+                } else {
+                    Predicate basePredicate = buildBasePredicate(root, cb, paramName, paramValue);
+                    if (basePredicate != null)
+                        groupedPredicates.add(basePredicate);
                 }
             }
-            return cb.and(predicates.toArray(new Predicate[0]));
+            return cb.and(groupedPredicates.toArray(new Predicate[0]));
         };
     }
 
     private Predicate buildBasePredicate(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
-
         switch (paramName) {
             case "type":
                 return cb.equal(root.get("type"), paramValue);
@@ -81,7 +82,7 @@ public class ShapeSpecification {
                 LocalDateTime dateTo = DateUtil.parseDate(paramValue);
                 return cb.lessThanOrEqualTo(root.get("createdDate"), dateTo);
             default:
-                throw new IllegalArgumentException("Attribute " + paramName + " is not recognized.");
+                throw new WrongAttributeException("Attribute " + paramName + " is not recognized.");
         }
     }
 }

@@ -15,14 +15,15 @@ public class ShapeToShapeFullDtoConverter implements Converter<Shape, ShapeFullD
 
         ShapeFullDto dto = ShapeFullDto.builder()
                 .id(source.getId())
-                .shapeType(source.getType())
+                .type(source.getType())
+                .version(source.getVersion())
                 .createdDate(source.getCreatedDate())
                 .createdBy(source.getCreatedBy().getUsername())
                 .lastModifiedDate(source.getLastModifiedDate())
                 .lastModifiedBy(source.getLastModifiedBy().getUsername())
                 .parameters(source.getParameters())
-                .calculatedArea(source.getArea())
-                .calculatedPerimeter(source.getPerimeter())
+                .calculatedArea(source.getCalculatedArea())
+                .calculatedPerimeter(source.getCalculatedPerimeter())
                 .build();
 
         return dto;

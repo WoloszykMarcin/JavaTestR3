@@ -41,7 +41,7 @@ public class ShapeService {
     }
 
     @Transactional
-    public void updateShape(Long id, ShapeUpdateCommand command, AppUser currentUser) {
+    public Shape updateShape(Long id, ShapeUpdateCommand command, AppUser currentUser) {
         Shape toEdit = repository.findById(id).orElseThrow(() -> new FigureNotFoundException("Figure not found"));
 
         Map<String, Object> changedFields = command.getParameters();
@@ -55,7 +55,7 @@ public class ShapeService {
             updateShapeField(toEdit, fieldName, newValue);
         }
 
-        repository.saveAndFlush(toEdit);
+        return repository.saveAndFlush(toEdit);
     }
 
     private void updateShapeField(Shape shape, String fieldName, Object newValue) {
@@ -87,30 +87,11 @@ public class ShapeService {
         Specification<Shape> spec = shapeSpecification.findByCriteria(queryParams);
         List<Shape> shapes = repository.findAll(spec);
 
-        shapes = filterShapesByAreaAndPerimeter(shapes, queryParams);
-
         return shapes.stream()
                 .map(shape -> {
                     ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
-                    shapeFullDto.setShapeType(shape.getType());
-                    shapeFullDto.setCalculatedArea(shape.getArea());
-                    shapeFullDto.setCalculatedPerimeter(shape.getPerimeter());
                     return shapeFullDto;
                 })
-                .collect(Collectors.toList());
-    }
-
-    private List<Shape> filterShapesByAreaAndPerimeter(List<Shape> shapes, Map<String, String> queryParams) {
-        Double minArea = queryParams.containsKey("areaFrom") ? Double.valueOf(queryParams.get("areaFrom")) : null;
-        Double maxArea = queryParams.containsKey("areaTo") ? Double.valueOf(queryParams.get("areaTo")) : null;
-        Double minPerimeter = queryParams.containsKey("perimeterFrom") ? Double.valueOf(queryParams.get("perimeterFrom")) : null;
-        Double maxPerimeter = queryParams.containsKey("perimeterTo") ? Double.valueOf(queryParams.get("perimeterTo")) : null;
-
-        return shapes.stream()
-                .filter(shape -> (minArea == null || shape.getArea() >= minArea)
-                        && (maxArea == null || shape.getArea() <= maxArea)
-                        && (minPerimeter == null || shape.getPerimeter() >= minPerimeter)
-                        && (maxPerimeter == null || shape.getPerimeter() <= maxPerimeter))
                 .collect(Collectors.toList());
     }
 }

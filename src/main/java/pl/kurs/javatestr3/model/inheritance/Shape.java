@@ -59,4 +59,12 @@ public abstract class Shape {
 
     public abstract double getPerimeter();
 
+    public double getCalculatedArea() {
+        return getArea();
+    }
+
+    public double getCalculatedPerimeter() {
+        return getPerimeter();
+    }
+
 }

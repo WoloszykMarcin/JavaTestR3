@@ -65,6 +65,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(WrongAttributeException.class)
+    public ResponseEntity<String> handleWrongAttributeException(WrongAttributeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity handleConstraintViolationException(ConstraintViolationException exc) {
         String constraintName = exc.getConstraintName().substring(8, exc.getConstraintName().indexOf(" ") - 8);

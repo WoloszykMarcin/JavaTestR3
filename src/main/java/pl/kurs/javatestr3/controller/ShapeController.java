@@ -4,7 +4,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.kurs.javatestr3.commands.CreateShapeCommand;
 import pl.kurs.javatestr3.commands.ShapeUpdateCommand;
@@ -18,7 +18,6 @@ import pl.kurs.javatestr3.service.ShapeChangeService;
 import pl.kurs.javatestr3.service.ShapeService;
 
 import javax.validation.Valid;
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,31 +41,21 @@ public class ShapeController {
     }
 
     @PostMapping
-    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command, Principal principal) {
-        String currentUsername = principal.getName();
-        UserDetails userDetails = userService.loadUserByUsername(currentUsername);
-        AppUser currentUser = (AppUser) userDetails;
-
+    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command, @AuthenticationPrincipal AppUser currentUser) {
         Shape shape = shapeService.createShape(command, currentUser);
         ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
-        shapeFullDto.setShapeType(shape.getType());
-        shapeFullDto.setCalculatedArea(shape.getArea());
-        shapeFullDto.setCalculatedPerimeter(shape.getPerimeter());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(shapeFullDto);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @shapeSecurityService.isShapeOwner(#id, authentication)")
-    public ResponseEntity<Shape> updateShape(@PathVariable Long id, @RequestBody ShapeUpdateCommand command, Principal principal) {
+    public ResponseEntity<ShapeFullDto> updateShape(@PathVariable Long id, @RequestBody ShapeUpdateCommand command, @AuthenticationPrincipal AppUser currentUser) {
         command.setId(id);
-        String currentUsername = principal.getName();
 
-        UserDetails userDetails = userService.loadUserByUsername(currentUsername);
-        AppUser currentUser = (AppUser) userDetails;
-
-        shapeService.updateShape(id, command, currentUser);
-        return ResponseEntity.ok().build();
+        Shape updateShape = shapeService.updateShape(id, command, currentUser);
+        ShapeFullDto dto = modelMapper.map(updateShape, ShapeFullDto.class);
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping

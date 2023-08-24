@@ -43,9 +43,9 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<UserFullDto>> getAllUsers(@PageableDefault Pageable pageable) {
-       return new ResponseEntity(appUserService.getAllUsers(pageable).stream()
-               .map(this::toFullDto)
-               .collect(Collectors.toList()), HttpStatus.OK);
+        return new ResponseEntity(appUserService.getAllUsers(pageable).stream()
+                .map(this::toFullDto)
+                .collect(Collectors.toList()), HttpStatus.OK);
     }
 
     public UserFullDto toFullDto(AppUser appUser) {
