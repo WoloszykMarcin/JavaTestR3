@@ -1,8 +1,9 @@
 package pl.kurs.javatestr3.validations.shapevalidations.factory;
 
-import pl.kurs.javatestr3.commands.CreateShapeCommand;
+import pl.kurs.javatestr3.commands.ShapeCommand;
 
 public interface ShapeValidator {
     boolean supports(String shapeType);
-    void validate(CreateShapeCommand command);
+
+    void validate(ShapeCommand command);
 }

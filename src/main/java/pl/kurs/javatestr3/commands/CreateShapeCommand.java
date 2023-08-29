@@ -11,7 +11,7 @@ import java.util.Map;
 @Setter
 @ToString
 @ValidShapeCommand
-public class CreateShapeCommand {
+public class CreateShapeCommand implements ShapeCommand {
     private String shapeType;
     private Map<String, Object> parameters;
 }

@@ -22,9 +22,9 @@ public class CircleSpecification implements ISpecification {
     public Predicate build(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
         Root<Circle> circleRoot = cb.treat(root, Circle.class);
 
-        Expression<Number> radius = circleRoot.get("radius").as(Number.class);
-        Expression<Number> areaExpression = cb.prod(cb.literal(Math.PI), cb.prod(radius, radius));
-        Expression<Number> perimeterExpression = cb.prod(cb.literal(2 * Math.PI), radius);
+        Expression<Double> radius = circleRoot.get("radius").as(Double.class);
+        Expression<Double> areaExpression = cb.prod(cb.literal(Math.PI), cb.prod(radius, radius));
+        Expression<Double> perimeterExpression = cb.prod(cb.literal(2 * Math.PI), radius);
 
         switch (paramName) {
             case "radiusFrom":

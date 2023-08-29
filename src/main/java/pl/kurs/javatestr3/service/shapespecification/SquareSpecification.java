@@ -22,9 +22,9 @@ public class SquareSpecification implements ISpecification {
     public Predicate build(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
         Root<Square> squareRoot = cb.treat(root, Square.class);
 
-        Expression<Number> side = squareRoot.get("side").as(Number.class);
-        Expression<Number> areaExpression = cb.prod(side, side);
-        Expression<Number> perimeterExpression = cb.prod(cb.literal(4.0), side);
+        Expression<Double> side = squareRoot.get("side").as(Double.class);
+        Expression<Double> areaExpression = cb.prod(side, side);
+        Expression<Double> perimeterExpression = cb.prod(cb.literal(4.0), side);
 
         switch (paramName) {
             case "sideFrom":

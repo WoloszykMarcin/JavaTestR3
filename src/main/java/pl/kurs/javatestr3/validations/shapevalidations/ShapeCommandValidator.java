@@ -1,7 +1,7 @@
 package pl.kurs.javatestr3.validations.shapevalidations;
 
 import org.springframework.stereotype.Service;
-import pl.kurs.javatestr3.commands.CreateShapeCommand;
+import pl.kurs.javatestr3.commands.ShapeCommand;
 import pl.kurs.javatestr3.exception.customexceptions.InvalidShapeTypeException;
 import pl.kurs.javatestr3.validations.shapevalidations.factory.ShapeValidator;
 import pl.kurs.javatestr3.validations.shapevalidations.factory.ShapeValidatorFactory;
@@ -11,9 +11,9 @@ import javax.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
 @Service
-public class ShapeCommandValidator implements ConstraintValidator<ValidShapeCommand, CreateShapeCommand> {
+public class ShapeCommandValidator implements ConstraintValidator<ValidShapeCommand, ShapeCommand> {
 
-    private ShapeValidatorFactory shapeValidatorFactory;
+    private final ShapeValidatorFactory shapeValidatorFactory;
 
     public ShapeCommandValidator(ShapeValidatorFactory shapeValidatorFactory) {
         this.shapeValidatorFactory = shapeValidatorFactory;
@@ -25,7 +25,7 @@ public class ShapeCommandValidator implements ConstraintValidator<ValidShapeComm
     }
 
     @Override
-    public boolean isValid(CreateShapeCommand command, ConstraintValidatorContext context) {
+    public boolean isValid(ShapeCommand command, ConstraintValidatorContext context) {
         if (!isValidShapeType(command.getShapeType()))
             throw new InvalidShapeTypeException("Invalid shape type: " + command.getShapeType());
 

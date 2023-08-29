@@ -22,8 +22,8 @@ public class RectangleSpecification implements ISpecification {
     public Predicate build(Root<Shape> root, CriteriaBuilder cb, String paramName, String paramValue) {
         Root<Rectangle> rectangleRoot = cb.treat(root, Rectangle.class);
 
-        Expression<Number> width = rectangleRoot.get("width").as(Number.class);
-        Expression<Number> length = rectangleRoot.get("length").as(Number.class);
+        Expression<Double> width = rectangleRoot.get("width").as(Double.class);
+        Expression<Double> length = rectangleRoot.get("length").as(Double.class);
         Expression<Number> areaExpression = cb.prod(length, width);
         Expression<Number> perimeterExpression = cb.prod(cb.literal(2.0), cb.sum(length, width));
 

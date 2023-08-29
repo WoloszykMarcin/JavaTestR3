@@ -5,10 +5,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pl.kurs.javatestr3.exception.customexceptions.WrongAttributeException;
 import pl.kurs.javatestr3.model.inheritance.Shape;
-import pl.kurs.javatestr3.service.DateUtil;
+import pl.kurs.javatestr3.service.util.DateUtil;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class ShapeSpecification {
 
     public Specification<Shape> findByCriteria(Map<String, String> criteria) {
         return (root, query, cb) -> {
+            root.fetch("createdBy", JoinType.LEFT);
             List<Predicate> groupedPredicates = new ArrayList<>();
 
             for (Map.Entry<String, String> entry : criteria.entrySet()) {
