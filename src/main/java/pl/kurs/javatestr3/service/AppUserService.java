@@ -2,6 +2,7 @@ package pl.kurs.javatestr3.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -50,15 +51,12 @@ public class AppUserService implements UserDetailsService {
         return appUserRepository.save(user);
     }
 
-
     @Transactional(readOnly = true)
-    public Page<AppUser> getAllUsers(Pageable pageable) {
-        Page<AppUser> users = appUserRepository.findAllUsers(pageable);
-        for (AppUser user : users) {
-            Set<AppRole> roles = appUserRepository.findRolesByUserId(user.getId());
-            user.setRoles(roles);
-        }
-        return users;
+    public Page<AppUser> findAllUsers(Pageable pageable) {
+        Page<Long> idsPage = appUserRepository.findIds(pageable);
+        List<AppUser> users = appUserRepository.findAllWithRolesAndShapesByIds(idsPage.getContent());
+
+        return new PageImpl<>(users, pageable, idsPage.getTotalElements());
     }
 
     @Override

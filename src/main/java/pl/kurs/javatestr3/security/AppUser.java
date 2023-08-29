@@ -38,8 +38,6 @@ public class AppUser implements UserDetails {
     @OneToMany(mappedBy = "lastModifiedBy")
     private Set<Shape> modifiedShapes = new HashSet<>();
 
-    private int numberOfCreatedFigures;
-
     public AppUser(String username, String password, Set<AppRole> roles) {
         this.username = username;
         this.password = password;
