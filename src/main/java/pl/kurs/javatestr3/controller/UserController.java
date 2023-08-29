@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import pl.kurs.javatestr3.commands.CreateUserCommand;
-import pl.kurs.javatestr3.dto.StatusDto;
 import pl.kurs.javatestr3.dto.UserFullDto;
 import pl.kurs.javatestr3.security.AppUser;
 import pl.kurs.javatestr3.service.AppUserService;
@@ -31,19 +30,17 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<StatusDto> addUser(@RequestBody @Valid CreateUserCommand command) {
+    public ResponseEntity<UserFullDto> addUser(@RequestBody @Valid CreateUserCommand command) {
         AppUser newUser = modelMapper.map(command, AppUser.class);
         newUser.setPassword(passwordEncoder.encode(command.getPassword()));
         AppUser savedUser = appUserService.createUser(newUser, command.getRoleName());
 
-        String savedUserRoleName = savedUser.getRoles().iterator().next().getName();
-
-        return ResponseEntity.ok(new StatusDto("new User with name " + savedUser.getUsername() + " successfully added with role: " + savedUserRoleName));
+        return new ResponseEntity(toFullDto(savedUser), HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<Page<UserFullDto>> getAllUsers(@PageableDefault Pageable pageable) {
-        return new ResponseEntity(appUserService.getAllUsers(pageable).stream()
+        return new ResponseEntity(appUserService.findAllUsers(pageable).stream()
                 .map(this::toFullDto)
                 .collect(Collectors.toList()), HttpStatus.OK);
     }

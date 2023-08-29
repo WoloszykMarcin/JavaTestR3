@@ -41,8 +41,8 @@ public class ShapeController {
     }
 
     @PostMapping
-    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command, @AuthenticationPrincipal AppUser currentUser) {
-        Shape shape = shapeService.createShape(command, currentUser);
+    public ResponseEntity<ShapeFullDto> save(@RequestBody @Valid CreateShapeCommand command) {
+        Shape shape = shapeService.createShape(command);
         ShapeFullDto shapeFullDto = modelMapper.map(shape, ShapeFullDto.class);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(shapeFullDto);
@@ -50,19 +50,20 @@ public class ShapeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @shapeSecurityService.isShapeOwner(#id, authentication)")
-    public ResponseEntity<ShapeFullDto> updateShape(@PathVariable Long id, @RequestBody ShapeUpdateCommand command, @AuthenticationPrincipal AppUser currentUser) {
-        command.setId(id);
-
+    public ResponseEntity<ShapeFullDto> updateShape(@PathVariable Long id, @RequestBody @Valid ShapeUpdateCommand command, @AuthenticationPrincipal AppUser currentUser) {
         Shape updateShape = shapeService.updateShape(id, command, currentUser);
-        ShapeFullDto dto = modelMapper.map(updateShape, ShapeFullDto.class);
-        return ResponseEntity.ok(dto);
+        ShapeFullDto shapeFullDto = modelMapper.map(updateShape, ShapeFullDto.class);
+        return ResponseEntity.ok(shapeFullDto);
     }
 
     @GetMapping
     public ResponseEntity<List<ShapeFullDto>> getShapesByParameters(@RequestParam Map<String, String> queryParams) {
-        List<ShapeFullDto> shapeDtos = shapeService.getShapesByParameters(queryParams);
+        List<Shape> shapes = shapeService.getShapesByParameters(queryParams);
+        List<ShapeFullDto> shapeFullDtos = shapes.stream()
+                .map(shape -> modelMapper.map(shape, ShapeFullDto.class))
+                .collect(Collectors.toList());
 
-        return ResponseEntity.ok(shapeDtos);
+        return ResponseEntity.ok(shapeFullDtos);
     }
 
     @GetMapping("/{id}/changes")
