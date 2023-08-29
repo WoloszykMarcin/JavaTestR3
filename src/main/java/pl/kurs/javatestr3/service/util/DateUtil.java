@@ -1,4 +1,4 @@
-package pl.kurs.javatestr3.service;
+package pl.kurs.javatestr3.service.util;
 
 import org.springframework.stereotype.Service;
 import pl.kurs.javatestr3.exception.customexceptions.InvalidDateFormatException;

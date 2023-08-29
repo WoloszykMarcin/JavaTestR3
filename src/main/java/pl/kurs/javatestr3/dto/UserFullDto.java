@@ -2,7 +2,6 @@ package pl.kurs.javatestr3.dto;
 
 import lombok.Builder;
 import lombok.Value;
-import pl.kurs.javatestr3.security.AppRole;
 
 import java.util.Set;
 
@@ -13,7 +12,7 @@ public class UserFullDto {
     private String firstName;
     private String lastName;
     private String username;
-    private Set<AppRole> appRoles;
+    private Set<String> appRoles;
     private int numberOfCreatedFigures;
 }
 

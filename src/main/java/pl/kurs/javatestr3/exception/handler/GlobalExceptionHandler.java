@@ -2,9 +2,11 @@ package pl.kurs.javatestr3.exception.handler;
 
 import lombok.Builder;
 import lombok.Value;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -74,6 +76,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleConstraintViolationException(ConstraintViolationException exc) {
         String constraintName = exc.getConstraintName().substring(8, exc.getConstraintName().indexOf(" ") - 8);
         return ResponseEntity.badRequest().body(constraintErrorMapper.get(constraintName).mapToErrorDto());
+    }
+
+    @ExceptionHandler(StaleObjectStateException.class)
+    public ResponseEntity<String> handleObjectOptimisticLockingFailureException() {
+        return new ResponseEntity<>("Figure has been changed by another user, try again!", HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

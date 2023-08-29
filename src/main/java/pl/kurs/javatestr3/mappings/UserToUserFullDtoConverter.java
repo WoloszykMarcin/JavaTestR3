@@ -5,7 +5,10 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.stereotype.Service;
 import pl.kurs.javatestr3.dto.UserFullDto;
 import pl.kurs.javatestr3.repository.AppUserRepository;
+import pl.kurs.javatestr3.security.AppRole;
 import pl.kurs.javatestr3.security.AppUser;
+
+import java.util.stream.Collectors;
 
 @Service
 public class UserToUserFullDtoConverter implements Converter<AppUser, UserFullDto> {
@@ -24,8 +27,8 @@ public class UserToUserFullDtoConverter implements Converter<AppUser, UserFullDt
                 .firstName(source.getFirstName())
                 .lastName(source.getLastName())
                 .username(source.getUsername())
-                .appRoles(source.getRoles())
-                .numberOfCreatedFigures(source.getNumberOfCreatedFigures())
+                .appRoles(source.getRoles().stream().map(AppRole::getAuthority).collect(Collectors.toSet()))
+                .numberOfCreatedFigures(source.getCreatedShapes().size())
                 .build();
 
         return dto;

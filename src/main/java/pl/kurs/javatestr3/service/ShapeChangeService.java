@@ -8,6 +8,7 @@ import pl.kurs.javatestr3.repository.ShapeChangeRepository;
 import pl.kurs.javatestr3.security.AppUser;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +27,9 @@ public class ShapeChangeService {
         return shapeChangeRepository.findByShapeIdWithDetails(shapeId);
     }
 
+    public List<ShapeChange> getChanges(Shape shape, Map<String, Object> changedFields, AppUser modifiedBy) {
+        List<ShapeChange> changesList = new ArrayList<>();
 
-    @Transactional
-    public void registerChange(Shape shape, Map<String, Object> changedFields, AppUser modifiedBy) {
         for (Map.Entry<String, Object> entry : changedFields.entrySet()) {
             String fieldName = entry.getKey();
             Object newValueObject = entry.getValue();
@@ -36,21 +37,27 @@ public class ShapeChangeService {
             String newValue = newValueObject != null ? newValueObject.toString() : null;
             String oldValue = getOldValue(shape, fieldName);
 
-            ShapeChange change = new ShapeChange();
-            change.setShape(shape);
-            change.setModifiedField(fieldName);
-            change.setOldValue(oldValue);
-            change.setNewValue(newValue);
-            change.setChangeDate(LocalDateTime.now());
-            change.setModifiedBy(modifiedBy);
+            if (hasValueChanged(newValue, oldValue) && shape.getParameters().containsKey(fieldName)) {
+                ShapeChange change = new ShapeChange();
+                change.setShape(shape);
+                change.setModifiedField(fieldName);
+                change.setOldValue(oldValue);
+                change.setNewValue(newValue);
+                change.setChangeDate(LocalDateTime.now());
+                change.setModifiedBy(modifiedBy);
 
-            shapeChangeRepository.save(change);
+                changesList.add(change);
+            }
         }
+
+        return changesList;
     }
 
     private String getOldValue(Shape shape, String fieldName) {
-        return Optional.ofNullable(shape.getParameters().get(fieldName))
-                .map(Object::toString)
-                .orElse(null);
+        return Optional.ofNullable(shape.getParameters().get(fieldName)).map(Object::toString).orElse(null);
+    }
+
+    private boolean hasValueChanged(String newValue, String oldValue) {
+        return !((newValue == null && oldValue == null) || (newValue != null && newValue.equals(oldValue)) || (oldValue != null && oldValue.equals(newValue)));
     }
 }
