@@ -43,4 +43,10 @@ public class Circle extends Shape {
         parameters.put("radius", radius);
         return parameters;
     }
+
+    @Override
+    public void setField(String fieldName, Object value) {
+        if ("radius".equals(fieldName))
+            this.radius = (double) value;
+    }
 }

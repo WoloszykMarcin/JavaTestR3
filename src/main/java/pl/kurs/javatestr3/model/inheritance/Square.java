@@ -40,4 +40,9 @@ public class Square extends Shape {
         parameters.put("side", side);
         return parameters;
     }
+    @Override
+    public void setField(String fieldName, Object value) {
+        if ("side".equals(fieldName))
+            this.side = (double) value;
+    }
 }

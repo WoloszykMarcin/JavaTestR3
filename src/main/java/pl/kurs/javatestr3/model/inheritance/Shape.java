@@ -53,12 +53,6 @@ public abstract class Shape {
         this.type = type;
     }
 
-    public abstract Map<String, Object> getParameters();
-
-    public abstract double getArea();
-
-    public abstract double getPerimeter();
-
     public double getCalculatedArea() {
         return getArea();
     }
@@ -66,5 +60,12 @@ public abstract class Shape {
     public double getCalculatedPerimeter() {
         return getPerimeter();
     }
+
+    public abstract Map<String, Object> getParameters();
+
+    public abstract double getArea();
+
+    public abstract double getPerimeter();
+    public abstract void setField(String fieldName, Object value);
 
 }

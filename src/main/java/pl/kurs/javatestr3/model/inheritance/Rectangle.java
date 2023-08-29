@@ -45,4 +45,12 @@ public class Rectangle extends Shape {
         parameters.put("width", width);
         return parameters;
     }
+
+    @Override
+    public void setField(String fieldName, Object value) {
+        if ("length".equals(fieldName))
+            this.length = (double) value;
+        else if ("width".equals(fieldName))
+            this.width = (double) value;
+    }
 }
